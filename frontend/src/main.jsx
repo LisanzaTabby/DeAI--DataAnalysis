@@ -4,7 +4,6 @@ import { backend } from 'declarations/backend';
 import botImg from '/bot.svg';
 import userImg from '/user.svg';
 import '/index.css';
-
 const App = () => {
   const [chat, setChat] = useState([
     {
