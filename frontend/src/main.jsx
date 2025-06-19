@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 // import { backend } from 'declarations/backend';
 import botImg from '/bot.svg';
 import userImg from '/user.svg';
-import '/index.css';
+import '../index.css';
 import App from './app'; // KEEP this import if it's needed for something else
 
 const MainApp = () => {
@@ -134,6 +134,6 @@ const MainApp = () => {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <MainApp />
+    <App />
   </React.StrictMode>
 );

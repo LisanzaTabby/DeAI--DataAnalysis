@@ -1,18 +1,61 @@
 import React, { useState, useRef, useEffect } from 'react';
-import botImg from '/bot.svg';
-import userImg from '/user.svg';
+import Cookies from 'js-cookie';
+import botImg from '../public/ai.png';
+import userImg from '../public/ai.png';
 import '../index.css';
-// import { backend } from 'declarations/backend'; // Uncomment if backend is used
+
+const Sidebar = ({ history, onSelect, onNewChat }) => (
+  <div className="w-64 bg-white border-r shadow p-4 overflow-y-auto h-full flex flex-col">
+    <button
+      onClick={onNewChat}
+      className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+    >
+      ➕ New Chat
+    </button>
+    <h2 className="text-lg font-semibold text-gray-700 mb-2">Previous Sessions</h2>
+    <ul className="space-y-2 flex-1 overflow-y-auto">
+      {history.map((chatItem, idx) => (
+        <li
+          key={idx}
+          onClick={() => onSelect(chatItem)}
+          className="cursor-pointer p-2 rounded hover:bg-blue-100 bg-gray-50 border text-sm"
+        >
+          Chat {idx + 1}
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
 const App = () => {
-  const [chat, setChat] = useState([
+  const initialPrompt = [
     { system: { content: "I'm a sovereign AI agent living on the Internet Computer. Ask me anything." } }
-  ]);
+  ];
+
+  const [chat, setChat] = useState(initialPrompt);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [insight, setInsight] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [history, setHistory] = useState([]);
   const chatBoxRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const saved = Cookies.get('chatHistory');
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (err) {
+        console.error('Failed to parse cookies:', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  }, [chat]);
 
   const formatDate = (date) => {
     const h = '0' + date.getHours();
@@ -31,10 +74,15 @@ const App = () => {
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate backend response (or replace with: await backend.chat(...))
     setTimeout(() => {
-      const response = { system: { content: `You said: "${inputValue}". I'm still learning. Try uploading data for insights.` } };
-      setChat((prev) => [...prev.slice(0, -1), response]);
+      const response = {
+        system: {
+          content: `🧠 Insight: "${inputValue}" looks interesting. Upload a dataset to dive deeper.`
+        }
+      };
+      const updatedChat = [...chat, userMessage, response];
+      setChat(updatedChat);
+      updateHistory(updatedChat);
       setIsLoading(false);
     }, 1500);
   };
@@ -42,89 +90,118 @@ const App = () => {
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setFileName(file.name);
-    setInsight(null);
-    setIsLoading(true);
 
-    // Simulate file processing
+    const uploadedMsg = { user: { content: `📁 Uploaded file: ${file.name}` } };
+    const thinkingMsg = { system: { content: 'Analyzing your dataset...' } };
+
+    setFileName(file.name);
+    setIsLoading(true);
+    const tempChat = [...chat, uploadedMsg, thinkingMsg];
+    setChat(tempChat);
+
     setTimeout(() => {
-      setInsight("✅ AI Insight: Your dataset contains null values in column 'age' and several duplicate entries.");
+      const aiResponse = {
+        system: {
+          content:
+            "✅ AI Insight: Your dataset contains null values in column 'age' and duplicate entries in 'email'."
+        }
+      };
+      const updatedChat = [...tempChat.slice(0, -1), aiResponse];
+      setChat(updatedChat);
+      updateHistory(updatedChat);
       setIsLoading(false);
     }, 2000);
   };
 
-  useEffect(() => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  }, [chat]);
+  const updateHistory = (session) => {
+    if (session.length <= 1) return; // avoid saving empty sessions
+    const newHistory = [...history, session];
+    setHistory(newHistory);
+    Cookies.set('chatHistory', JSON.stringify(newHistory), { expires: 7 });
+  };
+
+  const loadHistory = (session) => {
+    setChat(session);
+  };
+
+  const startNewChat = () => {
+    if (chat.length > 1) updateHistory(chat); // save current before reset
+    setChat(initialPrompt);
+    setFileName('');
+    setInputValue('');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-6 px-4">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">🤖 DeAI – Agent Launcher</h1>
+    <div className="min-h-screen bg-gray-100 flex">
+      <Sidebar history={history} onSelect={loadHistory} onNewChat={startNewChat} />
 
-        {/* Chat Display */}
-        <div className="h-72 overflow-y-auto space-y-4 mb-4 p-2 bg-gray-50 rounded border" ref={chatBoxRef}>
-          {chat.map((msg, i) => {
-            const isUser = 'user' in msg;
-            const text = isUser ? msg.user.content : msg.system.content;
-            const img = isUser ? userImg : botImg;
-            const name = isUser ? 'User' : 'Agent';
+      <div className="flex flex-col flex-1 items-center py-6 px-4">
+        <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6">
+          <h1 className="text-3xl font-bold text-blue-600 mb-6">🤖 DataMind</h1>
 
-            return (
-              <div key={i} className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
-                {!isUser && <img src={img} className="h-6 w-6 mt-1" alt="bot" />}
-                <div className={`${isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} px-3 py-2 rounded-md max-w-[80%]`}>
-                  <div className="text-xs text-gray-500 mb-1">{name} • {formatDate(new Date())}</div>
-                  {text}
+          <div ref={chatBoxRef} className="h-72 overflow-y-auto space-y-4 mb-4 p-4 bg-gray-50 border rounded">
+            {chat.map((msg, i) => {
+              const isUser = 'user' in msg;
+              const text = isUser ? msg.user.content : msg.system.content;
+              const img = isUser ? userImg : botImg;
+              const name = isUser ? 'You' : 'Agent';
+
+              return (
+                <div key={i} className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                  {!isUser && <img src={img} className="h-6 w-6 mt-1" alt="bot" />}
+                  <div className={`${isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} px-3 py-2 rounded-md max-w-[80%]`}>
+                    <div className="text-xs text-gray-500 mb-1">{name} • {formatDate(new Date())}</div>
+                    <div>{text}</div>
+                  </div>
+                  {isUser && <img src={img} className="h-6 w-6 mt-1" alt="user" />}
                 </div>
-                {isUser && <img src={img} className="h-6 w-6 mt-1" alt="user" />}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Chat Input */}
-        <form className="flex items-center gap-2" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            disabled={isLoading}
-            placeholder="Ask the agent anything..."
-            className="flex-1 border border-gray-300 px-3 py-2 rounded focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
-          >
-            Send
-          </button>
-        </form>
-
-        {/* File Upload */}
-        <div className="mt-6">
-          <label className="block mb-1 font-medium">📁 Upload dataset for AI analysis:</label>
-          <input
-            type="file"
-            onChange={handleUpload}
-            className="w-full border border-gray-300 p-2 rounded"
-          />
-          {fileName && <p className="text-sm text-gray-600 mt-1">Uploaded: <strong>{fileName}</strong></p>}
-        </div>
-
-        {/* AI Insight Display */}
-        {insight && (
-          <div className="mt-4 p-4 bg-green-100 text-green-800 rounded shadow">
-            <h3 className="font-semibold mb-1">📊 Insight:</h3>
-            <p>{insight}</p>
+              );
+            })}
           </div>
-        )}
 
-        {/* Loading Spinner */}
-        {isLoading && <p className="mt-4 text-blue-500 italic">⏳ Processing...</p>}
+          <form className="flex items-center gap-2 mb-6" onSubmit={handleSubmit}>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className="text-2xl text-blue-500 font-bold px-3 py-2 border rounded hover:bg-blue-50"
+              title="Upload CSV/XLSX"
+            >
+              +
+            </button>
+            <input
+              type="file"
+              accept=".csv, .xlsx"
+              onChange={handleUpload}
+              ref={fileInputRef}
+              className="hidden"
+            />
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              disabled={isLoading}
+              placeholder="Ask the agent anything..."
+              className="flex-1 border border-gray-300 px-3 py-2 rounded focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
+            >
+              Send
+            </button>
+          </form>
+
+          {fileName && (
+            <p className="mb-2 text-sm text-gray-600">
+              Last uploaded: <strong>{fileName}</strong>
+            </p>
+          )}
+
+          {isLoading && (
+            <p className="mt-2 text-blue-500 italic">⏳ Processing...</p>
+          )}
+        </div>
       </div>
     </div>
   );
