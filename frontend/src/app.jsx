@@ -5,20 +5,23 @@ import userImg from '../public/ai.png';
 import '../index.css';
 
 const Sidebar = ({ history, onSelect, onNewChat }) => (
-  <div className="w-64 bg-white border-r shadow p-4 overflow-y-auto h-full flex flex-col">
+  <div className="w-64 border-r p-4 overflow-y-auto h-full flex flex-col">
+    <div className="text-xl font-bold text-blue-600 mb-6 text-center">🤖 DataMind</div>
+
     <button
       onClick={onNewChat}
-      className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+      className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
     >
       ➕ New Chat
     </button>
+
     <h2 className="text-lg font-semibold text-gray-700 mb-2">Previous Sessions</h2>
     <ul className="space-y-2 flex-1 overflow-y-auto">
       {history.map((chatItem, idx) => (
         <li
           key={idx}
           onClick={() => onSelect(chatItem)}
-          className="cursor-pointer p-2 rounded hover:bg-blue-100 bg-gray-50 border text-sm"
+          className="cursor-pointer p-2 rounded hover:bg-blue-100 text-sm transition"
         >
           Chat {idx + 1}
         </li>
@@ -114,7 +117,7 @@ const App = () => {
   };
 
   const updateHistory = (session) => {
-    if (session.length <= 1) return; // avoid saving empty sessions
+    if (session.length <= 1) return;
     const newHistory = [...history, session];
     setHistory(newHistory);
     Cookies.set('chatHistory', JSON.stringify(newHistory), { expires: 7 });
@@ -125,83 +128,84 @@ const App = () => {
   };
 
   const startNewChat = () => {
-    if (chat.length > 1) updateHistory(chat); // save current before reset
+    if (chat.length > 1) updateHistory(chat);
     setChat(initialPrompt);
     setFileName('');
     setInputValue('');
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen flex text-sm">
       <Sidebar history={history} onSelect={loadHistory} onNewChat={startNewChat} />
 
       <div className="flex flex-col flex-1 items-center py-6 px-4">
-        <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6">
-          <h1 className="text-3xl font-bold text-blue-600 mb-6">🤖 DataMind</h1>
+        <h1 className="text-2xl font-semibold text-blue-600 mb-4">🤖 Hi! I am DataMind, how can I help you?</h1>
 
-          <div ref={chatBoxRef} className="h-72 overflow-y-auto space-y-4 mb-4 p-4 bg-gray-50 border rounded">
-            {chat.map((msg, i) => {
-              const isUser = 'user' in msg;
-              const text = isUser ? msg.user.content : msg.system.content;
-              const img = isUser ? userImg : botImg;
-              const name = isUser ? 'You' : 'Agent';
+        <div
+          ref={chatBoxRef}
+          className="w-full max-w-3xl h-[28rem] overflow-y-auto space-y-4 mb-4"
+        >
+          {chat.map((msg, i) => {
+            const isUser = 'user' in msg;
+            const text = isUser ? msg.user.content : msg.system.content;
+            const img = isUser ? userImg : botImg;
+            const name = isUser ? 'You' : 'Agent';
 
-              return (
-                <div key={i} className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
-                  {!isUser && <img src={img} className="h-6 w-6 mt-1" alt="bot" />}
-                  <div className={`${isUser ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'} px-3 py-2 rounded-md max-w-[80%]`}>
-                    <div className="text-xs text-gray-500 mb-1">{name} • {formatDate(new Date())}</div>
-                    <div>{text}</div>
-                  </div>
-                  {isUser && <img src={img} className="h-6 w-6 mt-1" alt="user" />}
+            return (
+              <div key={i} className={`flex items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                {!isUser && <img src={img} className="h-6 w-6 mt-1" alt="bot" />}
+                <div className={`${isUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'} px-3 py-2 rounded-xl max-w-[80%]`}>
+                  <div className="text-[10px] text-gray-500 mb-1">{name} • {formatDate(new Date())}</div>
+                  <div className="whitespace-pre-wrap">{text}</div>
                 </div>
-              );
-            })}
-          </div>
-
-          <form className="flex items-center gap-2 mb-6" onSubmit={handleSubmit}>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current.click()}
-              className="text-2xl text-blue-500 font-bold px-3 py-2 border rounded hover:bg-blue-50"
-              title="Upload CSV/XLSX"
-            >
-              +
-            </button>
-            <input
-              type="file"
-              accept=".csv, .xlsx"
-              onChange={handleUpload}
-              ref={fileInputRef}
-              className="hidden"
-            />
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              disabled={isLoading}
-              placeholder="Ask the agent anything..."
-              className="flex-1 border border-gray-300 px-3 py-2 rounded focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
-            >
-              Send
-            </button>
-          </form>
-
-          {fileName && (
-            <p className="mb-2 text-sm text-gray-600">
-              Last uploaded: <strong>{fileName}</strong>
-            </p>
-          )}
-
-          {isLoading && (
-            <p className="mt-2 text-blue-500 italic">⏳ Processing...</p>
-          )}
+                {isUser && <img src={img} className="h-6 w-6 mt-1" alt="user" />}
+              </div>
+            );
+          })}
         </div>
+
+        <form className="w-full max-w-3xl flex items-center gap-2" onSubmit={handleSubmit}>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current.click()}
+            className="text-xl text-blue-600 font-bold px-3 py-2 border border-blue-600 rounded hover:bg-blue-100"
+            title="Upload CSV/XLSX"
+          >
+            📎
+          </button>
+          <input
+            type="file"
+            accept=".csv, .xlsx"
+            onChange={handleUpload}
+            ref={fileInputRef}
+            className="hidden"
+          />
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isLoading}
+            placeholder="Type your message..."
+            className="flex-1 border border-gray-300 px-4 py-2 rounded focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:bg-blue-300"
+          >
+            Send
+          </button>
+        </form>
+
+        {fileName && (
+          <p className="mt-2 text-xs text-gray-500">
+            Last uploaded: <strong>{fileName}</strong>
+          </p>
+        )}
+
+        {isLoading && (
+          <p className="mt-2 text-blue-500 italic text-sm">⏳ Processing...</p>
+        )}
       </div>
     </div>
   );
