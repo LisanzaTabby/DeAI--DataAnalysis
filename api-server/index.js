@@ -50,12 +50,6 @@ Please provide:
 
 Focus on actionable insights and meaningful visual representations of the data.
  `;
- console.log("📥 Received Data:", {
-  rowCount,
-  columnCount,
-  sampleKeys,
-  sampleRows
-});
 
 
   try {
