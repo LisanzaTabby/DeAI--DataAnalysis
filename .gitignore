@@ -1,0 +1,5 @@
+node_modules
+api-server/.env
+.env
+.dfx
+.mops
