@@ -1,3 +1,24 @@
+
+{
+  "name": "llm-chatbot",
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "prebuild": "npm run prebuild --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present"
+  },
+  "type": "module",
+  "workspaces": [
+    "frontend"
+  ],
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "chart.js": "^4.5.0",
+    "openai": "^5.5.1",
+    "papaparse": "^5.5.3",
+    "recharts": "^2.15.3"
+  }
+}
+
 {
   "name": "llm-chatbot",
   "scripts": {
@@ -13,3 +34,4 @@
     "js-cookie": "^3.0.5"
   }
 }
+
