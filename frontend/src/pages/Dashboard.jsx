@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Home = () => {
+const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-700 to-teal-900 text-white">
       
       {/* Hero Section */}
       <section className="text-center py-20 px-4">
-        <h1 className="text-5xl font-extrabold mb-6">Welcome to DataMind 📊</h1>
+        <h1 className="text-5xl font-extrabold mb-6">Welcome {username} to DataMind 📊</h1>
         <p className="text-lg text-gray-200 max-w-2xl mx-auto">
           Upload your CSVs, get AI-generated summaries, and visualize data with ease. 
         </p>
@@ -93,4 +93,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Dashboard;

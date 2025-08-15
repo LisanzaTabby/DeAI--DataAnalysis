@@ -117,7 +117,9 @@ const ChartComponent = ({ data }) => {
       <div className="space-y-6">
         {charts.length > 0 ? charts : <p>No suitable chart data found.</p>}
       </div>
+      <button onClick={downloadChartImage}>Download as Image</button>
     </div>
+    
   );
 };
 
